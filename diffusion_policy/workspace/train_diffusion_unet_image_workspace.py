@@ -115,12 +115,15 @@ class TrainDiffusionUnetImageWorkspace(BaseWorkspace):
         # compute normalizer on the main process and save to disk
         normalizer_path = os.path.join(self.output_dir, 'normalizer.pkl')
         if accelerator.is_main_process:
+            os.makedirs(self.output_dir, exist_ok=True)
             normalizer = dataset.get_normalizer()
-            pickle.dump(normalizer, open(normalizer_path, 'wb'))
+            with open(normalizer_path, 'wb') as f:
+                pickle.dump(normalizer, f)
 
         # load normalizer on all processes
         accelerator.wait_for_everyone()
-        normalizer = pickle.load(open(normalizer_path, 'rb'))
+        with open(normalizer_path, 'rb') as f:
+            normalizer = pickle.load(f)
 
         # configure validation dataset
         val_dataset = dataset.get_validation_dataset()
